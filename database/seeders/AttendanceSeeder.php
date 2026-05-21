@@ -129,14 +129,14 @@ class AttendanceSeeder extends Seeder
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /**
-     * Return the last $count working days (Mon–Sat) up to yesterday.
+     * Return the last $count working days (Mon–Sat) including today.
      *
      * @return Carbon[]
      */
     private function getWorkingDays(int $count): \Illuminate\Support\Collection
     {
         $days   = collect();
-        $cursor = Carbon::yesterday();
+        $cursor = Carbon::today();
 
         while ($days->count() < $count) {
             // Skip Sunday only (Mon–Sat are working days in Indonesia)
@@ -183,6 +183,11 @@ class AttendanceSeeder extends Seeder
         // Check-out: shift end ± 0–60 min
         $checkOutVariance = mt_rand(-10, 60);
         $checkOut         = $shiftEnd->copy()->addMinutes($checkOutVariance);
+
+        // Cap check-out at now() if today (don't generate future timestamps)
+        if ($day->isToday() && $checkOut->isFuture()) {
+            $checkOut = Carbon::now();
+        }
 
         // Overtime only when leaving after shift end
         $overtime = $checkOut->greaterThan($shiftEnd)
