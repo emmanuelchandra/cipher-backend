@@ -38,8 +38,17 @@ COPY . .
 # 7. Selesaikan instalasi Composer
 RUN composer dump-autoload --optimize --no-dev
 
-# 8. Set permission folder yang perlu ditulis Laravel
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+# 8. Pastikan struktur folder storage Laravel ada, lalu set permission.
+#    Folder ini bisa hilang dari image karena .dockerignore mengecualikan
+#    isinya, jadi kita buat ulang dulu sebelum chown.
+RUN mkdir -p \
+        /var/www/html/storage/app/public \
+        /var/www/html/storage/framework/cache/data \
+        /var/www/html/storage/framework/sessions \
+        /var/www/html/storage/framework/views \
+        /var/www/html/storage/logs \
+        /var/www/html/bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # 9. Apache jalan di port 80 (Render otomatis memetakan ke HTTPS publik)
